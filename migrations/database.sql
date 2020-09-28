@@ -1,9 +1,6 @@
-/*Set up migration*/
-
-CREATE DATABASE recipe;
-
 CREATE TABLE recipe
 (
     recipe_id SERIAL PRIMARY KEY,
-    description VARCHAR(700)
+    description VARCHAR(1000),
+    owner VARCHAR(50)
 );
