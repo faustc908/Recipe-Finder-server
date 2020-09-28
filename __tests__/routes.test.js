@@ -5,7 +5,7 @@ const app = require("../index");
 beforeAll(async () => {
   // create recipe table
   await db.query(
-    "CREATE TABLE recipe (recipe_id SERIAL PRIMARY KEY, description VARCHAR(1000))"
+    "CREATE TABLE recipe (recipe_id SERIAL PRIMARY KEY, description VARCHAR(1000), owner VARCHAR(50))"
   );
 });
 
