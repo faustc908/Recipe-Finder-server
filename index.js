@@ -1,31 +1,62 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const pool = require("./pgInfo");
+const pool = require("./db");
+const bodyParser = require("body-parser");
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Routes
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.set("port", process.env.PORT || 3000);
+app.locals.title = "recipe";
 
+// CRUD routes
+
+// Mock route to test routing
+
+app.get("/", function (req, res) {
+  const f =
+    "<html><head></head><body><form method='put' action='putrecipe'>ID:<input name='recipe_id' value='1'/><input name='description' value='Not found'/><input type='submit'/></form></body></html>";
+  res.send(f);
+});
+app.get("/test", function (req, res) {
+  res.send('{"id": 1, "test":"Hello"}');
+});
+//  Post Recipe
+app.post("/recipeTest", async (req, res) => {
+  try {
+    console.log("recipeTest");
+    const { description } = req.body;
+    const json = `{"description": "${description}"}`;
+    console.log("recipeTest-json:" + json);
+    res.send(json);
+    res.end();
+    //res.json(newRecipe.rows[0]);
+  } catch (error) {
+    console.error(error.message);
+  }
+});
 app.post("/recipe", async (req, res) => {
   try {
     const { description } = req.body;
+    console.log("posting to recipe");
     const newRecipe = await pool.query(
-      "INSERT INTO recipe (description) VALUES($1) RETURNING *",
+      "INSERT INTO recipe (owner, description) VALUES('test', $1) RETURNING *",
       [description]
     );
-
+    console.log("post insert");
     res.json(newRecipe.rows[0]);
   } catch (error) {
     console.error(error.message);
   }
 });
 
-// get all recipes
+// Get all recipes
 
-app.get("/recipes", async (req, res) => {
+app.get("/recipe", async (req, res) => {
   try {
     const allRecipes = await pool.query("SELECT * FROM recipe");
     res.json(allRecipes.rows);
@@ -34,14 +65,15 @@ app.get("/recipes", async (req, res) => {
   }
 });
 
-// get a recipe by ID
+// Get a recipe by ID
 
 app.get("/recipe/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const recipe = await pool.query("SELECT * FROM todo WHERE recipe_id = $1", [
-      id,
-    ]);
+    const recipe = await pool.query(
+      "SELECT * FROM recipe WHERE recipe_id = $1",
+      [id]
+    );
 
     res.json(recipe.rows[0]);
   } catch (error) {
@@ -49,7 +81,7 @@ app.get("/recipe/:id", async (req, res) => {
   }
 });
 
-// delete a recipe
+// Delete a recipe
 
 app.delete("/recipe/:id", async (req, res) => {
   try {
@@ -58,29 +90,28 @@ app.delete("/recipe/:id", async (req, res) => {
       "DELETE FROM recipe WHERE recipe_id = $1",
       [id]
     );
+    console.log("Deleted " + id);
     res.json("Recipe deleted");
   } catch (error) {
     console.log(error.message);
   }
 });
 
-// update a recipe
+// Update a recipe
 
-app.put("/recipe/:id", async (req, res) => {
+app.put("/recipe/:id/:description", async (req, res) => {
   try {
-    const { id } = req.params;
-    const { description } = req.body;
+    const { id, description } = req.params;
     const updateRecipe = await pool.query(
       "UPDATE recipe SET description = $1 WHERE recipe_id = $2",
       [description, id]
     );
-
-    res.json("recipe update");
+    console.log("updated " + description);
+    res.json("recipe updated");
   } catch (error) {
     console.error(error.message);
   }
 });
 
-app.listen(8000, () => {
-  console.log("server is up on port 8000");
-});
+module.exports = app;
+
